@@ -102,19 +102,60 @@ class AudioControl(object):
         sd.wait()
         '''TERMINAR'''
         return 
-        
-    def barrido_frecuencia(self,frec_min,frec_max,pasos=15,amp=None,long=10):
-        "Genera un vector de frecuencias entre la mínima y la máxima, con los pasos especificados. Manda funcines senoidales de esa frencuencia y graba la respuesta. Devuelve (por ahora) el vector de frecuencias y un gráfico que muestra la amplitud máxima registrada (puede mejorarse como la obtiene) en función de la frecuencia.MEJORAR"
-        frec=np.linspace(frec_min,frec_max,num=pasos)
-        maximos=np.zeros(pasos)
-        for i in range(pasos):
-            rec=sd.playrec(self.crearOnda(frec[i],amp=amp,long=long),self.fs,channels=2)
-            sd.wait()
-            maximos[i]=np.max(rec)
-        plt.plot(frec,maximos,'.')
-        return frec 
-   
+       
+    def calculo_potencia(self,data):
+        return np.sum(data[len(data)//3:2*len(data)//3]**2)/(len(data)//3)
     
+    def barrido_frecuencia_onda(self,frec_min,frec_max,pasos=15,amp=None,long=10):
+        "Genera un vector de frecuencias entre la mínima y la máxima, con los pasos especificados. Manda funcines senoidales de esa frencuencia y graba la respuesta. Devuelve (por ahora) el vector de frecuencias y un gráfico que muestra la amplitud máxima registrada (puede mejorarse como la obtiene) en función de la frecuencia.CALCULAR LÍMITE TEORICO"
+        frecs=np.logspace(np.log10(frec_min),np.log10(frec_max),num=pasos)
+        output = np.zeros([pasos,5])
+        for i in range(len(frecs)):
+            frec=frecs[i]
+            output[i,0]=frecs[i] # primer dato freec, segundo pot de entrada, tercero y cuarto pot de salida
+            rec=sd.playrec(self.crearOnda(frec,amp=amp,long=long),self.fs,channels=2)
+            sd.wait()
+            channels = [0,1]
+            for channel in channels:
+                output[i,3+channel]= self.calculo_potencia(rec[:,channel])
+                output[i,1+channel]= self.calculo_potencia(self.crearOnda(frec,amp=amp,long=long))
+        
+        plt.plot(output[:,0],output[:,1],output[:,0],output[:,2],output[:,0],output[:,3],output[:,0],output[:,4],'*')
+        return output
+    
+    def add_cola(self, senal, long=0.2):
+        ret=np.concatenate((np.zeros(int(np.round(long*self.fs))),senal,np.zeros(int(np.round(long*self.fs)))))
+        return ret
+    
+    def playrec(self,senal): 
+       rec=sd.playrec(senal,self.fs,channels=2)
+       sd.wait()
+       return rec
+   
+    def gen_trigger(self,senal):
+        t_trig = 0.02
+        frec1 = 440
+        frec2 = 1000
+        samples_triguer = t_trig * self.fs
+        N=len(senal)
+        if N>samples_triguer * 2:
+            c1=self.crearOnda(frec1,long=t_trig)
+            c2=np.zeros(int(np.round(N-samples_triguer*2)))
+            c3=self.crearOnda(frec2,long=t_trig)
+            trig=np.concatenate((c1,c2,c3))
+            #plt.figure(1),plt.plot(trig)
+            return trig
+        else:
+            return print('La cantidad de muestras de la señal es insuficiente')
+        
+    def medicion_sycr(self,senal):
+        ###SENAL AUXILIAR####
+        rec=self.playrec(np.stack((self.add_cola(self.gen_trigger(senal)),self.add_cola(senal)),axis=-1))
+        sd.wait()
+        plt.figure(2),plt.plot(rec)
+        return rec
+
+        
     
     
     
