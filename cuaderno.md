@@ -6,6 +6,24 @@ No fui. La idea de la clase es medir la curva de respuesta de un diodo y algo m�
 
 Lunes 27/08
 
+<<<<<<< HEAD
+Trabajamos con Ioni para por lo menos empezar a ver c�mo usar el micr�fono y los parlantes como medidores. Los podemos controlar e hicimos una funci�n test, que es una instancia de prueba a ver si todo funciona. Despu�s, empezamos a tratar de programar algunas funciones: senoidal, cuadrada y ah� quedamos. Quedar�a una constante, una arbitraria y eso. En el repositorio, el archivo de python se llama "test.py". Por ahora ah� est� todo. 
+
+Miercoles 29/8
+
+Cambiamos de repositorios, ahora Agus creo el repo actual y Ioni tiene un fork
+
+Agus se va a encargar de avanzar con el tema de escritura y la caracterizacion, Ioni va a avanzar con el tema de lectura y escribir los codigos base.
+
+De la escritura necesitamos:
+
+Agregar mandar rampa
+agregar mandar constante
+
+Caracterizar con osciloscopio slew rate
+caracterizar con osciloscopio valores efectivos 
+caracterizar con osciloscopio discretizacion
+=======
 Trabajamos con Ioni para por lo menos empezar a ver cómo usar el micrófono y los parlantes como medidores. Los podemos controlar e hicimos una función test, que es una instancia de prueba a ver si todo funciona. Después, empezamos a tratar de programar algunas funciones: senoidal, cuadrada y ahí quedamos. Quedaría una constante, una arbitraria y eso. En el repositorio, el archivo de python se llama "test.py". Por ahora ahí está todo. 
 
 Miércoles 29/08
@@ -20,3 +38,4 @@ Agregué funciones de playrec de la senoidal y de la serrucho que pueden servir 
 Estaría bueno lograr lo de la cuadrada para medir el tiempo de respuesta de la placa de audio como generador. Pero no sé. 
 Agregué un barrido en frecuencia también para ver como responde a distintas señales. 
 Todo lo hice con sonido real porque tengo un solo cable pelado y, lo más importante, una única salida de audio in/out. Habría que ver de comprar el cable de los pibes estos. 
+>>>>>>> upstream/master
