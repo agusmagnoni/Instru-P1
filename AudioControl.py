@@ -12,7 +12,7 @@ from scipy import signal
 # Definimos constantes
 fs = 48000
 ampMax = 0.5 # En valores arbitrarios float que es lo que recibe el paquetes sounddevice
-long_d = 1 # En segundos
+long_d = 3 # En segundos
 DEBUG = False
 
 
@@ -110,7 +110,7 @@ def barrido_frecuencia_sin(frec_min=10,frec_max=1000000,pasos=1000,amp=ampMax,lo
         return frecs, [pot_in_ch1,pot_in_ch2],[pot_out_ch1,pot_out_ch2]
     
 def add_cola(signal, long=0.2):
-    ret=np.concatenate((np.zeros(int(np.round(long*fs))),senal,np.zeros(int(np.round(long*fs)))))
+    ret=np.concatenate((np.zeros(int(np.round(long*fs))),signal,np.zeros(int(np.round(long*fs)))))
     return ret
 
 def gen_trigger(senal):
@@ -121,17 +121,55 @@ def gen_trigger(senal):
     N=len(senal)
     if N>samples_triguer * 10: # Pedimos que haya una senal lo suficientemente larga
         c1=Onda(frec1,long=t_trig)
-        c2=np.zeros(int(np.round(N-samples_triguer*2)))
+        c2=np.zeros(int(np.round((N-samples_triguer*2)/3)))
         c3=Onda(frec2,long=t_trig)
-        trig=np.concatenate((c1,c2,c3))
+        c4=np.zeros(int(np.round(2*(N-samples_triguer*2)/3)))
+        trig=np.concatenate((c1,c2,c3,c4))
         return trig
     else:
         return print('La cantidad de muestras de la señal no cumple el criterio de ser 10 veces mayor al tamaño de los triggers')
     
 def sync(signal):
-    print ('Funcion en desarrollo')
+    print ('Funcion en desar(rollo')
     print ('Esta funcion asume que el Ch1 conecta directamente la salida de audio con la entrada de microfono, y que el Ch2 conecta la salida de audio con la entrada del dispositivo a caracterizar, cuya respuesta llega al Ch2 del microfono.')
-    rec=self.playrec(np.stack((add_cola(gen_trigger(senal)),add_cola(senal)),axis=-1))
+    #rec=playrec(np.stack((add_cola(gen_trigger(signal)),add_cola(signal)),axis=-1))
+    rec=playrec(np.stack((add_cola(signal),add_cola(gen_trigger(signal))),axis=-1))
     sd.wait()
     plt.figure(2),plt.plot(rec)
+    plt.figure(3),plt.plot(add_cola(gen_trigger(signal))),plt.plot(add_cola(signal))
+    trig=add_cola(gen_trigger(signal))
+    inp=add_cola(signal)
+    return rec, inp, trig
+
+def sync_conv(signal):
+    print ('Funcion en desarrollo')
+    print ('Esta funcion asume que el Ch1 conecta directamente la salida de audio con la entrada de microfono, y que el Ch2 conecta la salida de audio con la entrada del dispositivo a caracterizar, cuya respuesta llega al Ch2 del microfono.')
+    rec=playrec(np.stack((add_cola(gen_trigger(signal)),add_cola(signal)),axis=-1))
+    sd.wait()
+    conv=np.convolve(add_cola(gen_trigger(signal))/np.max(add_cola(gen_trigger(signal))),rec[:,0]/np.max(rec[:,0]),mode='full')
+    plt.figure(2),plt.plot(rec)
+    plt.figure(3),plt.plot(add_cola(gen_trigger(signal))/np.max(add_cola(gen_trigger(signal)))),plt.plot(rec[:,0]/np.max(rec[:,0]))
+    plt.figure(4),plt.plot(conv)
     return rec
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
