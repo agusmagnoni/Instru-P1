@@ -14,6 +14,10 @@ fs = 48000
 ampMax = 0.5 # En valores arbitrarios float que es lo que recibe el paquetes sounddevice
 long_d = 3 # En segundos
 DEBUG = False
+triguer_max = 1000
+triguer_min = 400
+triguer_test = 800
+t_trig = 0.02 # Tiempo que dura la senal de trigger
 
 
 # Definimos funciones utiles
@@ -114,17 +118,22 @@ def add_cola(signal, long=0.2):
     return ret
 
 def gen_trigger(senal):
-    t_trig = 0.02 # Tiempo que dura la senal de trigger
-    frec1 = 440 # Frecuencia del trigger inicial
-    frec2 = 1000 # Frecuencia del trigger final
     samples_triguer = t_trig * fs
     N=len(senal)
+<<<<<<< HEAD
     if N>samples_triguer * 10: # Pedimos que haya una senal lo suficientemente larga
         c1=Onda(frec1,long=t_trig)
         c2=np.zeros(int(np.round((N-samples_triguer*2)/3)))
         c3=Onda(frec2,long=t_trig)
         c4=np.zeros(int(np.round(2*(N-samples_triguer*2)/3)))
         trig=np.concatenate((c1,c2,c3,c4))
+=======
+    if N>=samples_triguer * 2: # Pedimos que haya una senal lo suficientemente larga
+        c1=Onda(triguer_min,long=t_trig)
+        c2=np.zeros(int(np.round(N-samples_triguer*2)))
+        c3=Onda(triguer_max,long=t_trig)
+        trig=np.concatenate((c1,c2,c3))
+>>>>>>> 08eed7e566ccedadb5e87181ccbaf892f1a17433
         return trig
     else:
         return print('La cantidad de muestras de la señal no cumple el criterio de ser 10 veces mayor al tamaño de los triggers')
@@ -148,6 +157,7 @@ def sync_conv(signal):
     sd.wait()
     conv=np.convolve(add_cola(gen_trigger(signal))/np.max(add_cola(gen_trigger(signal))),rec[:,0]/np.max(rec[:,0]),mode='full')
     plt.figure(2),plt.plot(rec)
+<<<<<<< HEAD
     plt.figure(3),plt.plot(add_cola(gen_trigger(signal))/np.max(add_cola(gen_trigger(signal)))),plt.plot(rec[:,0]/np.max(rec[:,0]))
     plt.figure(4),plt.plot(conv)
     return rec
@@ -173,3 +183,68 @@ def sync_conv(signal):
 
 
 
+=======
+    return rec
+
+def sync_test(signal):
+    ratio_umbral=3
+    import numpy
+    print ('Funcion en desarrollo. Queremos probar implementar el sync salteando la medicion')
+    trig = gen_trigger(signal)
+    trig = add_cola(trig)
+    plt.figure(1)
+    plt.plot(signal)
+    plt.plot(trig)
+    #trig = trig[0:int(len(trig)/2)]
+    t = numpy.fft.fft(trig)
+    plt.figure(2)
+    plt.plot(numpy.abs(t))
+    frec_min_esperada = triguer_min * len(trig)/fs
+    frec_max_esperada = triguer_max * len(trig)/fs
+    frec_test_esperada = triguer_test * len(trig)/fs
+    delta = int((frec_max_esperada-frec_min_esperada)/20)
+    if delta < 10:
+        print ('Error: la distancia entre los picos esperados en el triguer es muy cercana a cero.')
+        return
+    if frec_min_esperada < delta:
+        print ('Error: el ancho del pico minimo abarca al cero')
+        return
+    if frec_max_esperada > len(t) + delta:
+        print ('Error: el ancho del pico maximo abarca al borde')
+        
+    print ('Pico 1 esperado en: ' + str(frec_min_esperada))
+    print ('Pico 2 esperado en: ' + str(frec_max_esperada))
+    print ('Pico no esperado en: ' + str(frec_test_esperada))
+    print (delta)
+    valor_pico_min = np.mean(np.abs(t[int(frec_min_esperada-delta):int(frec_min_esperada+delta)]))
+    valor_pico_max = np.mean(np.abs(t[int(frec_max_esperada-delta):int(frec_max_esperada+delta)]))
+    valor_pico_test = np.mean(np.abs(t[int(frec_test_esperada-delta):int(frec_test_esperada+delta)]))
+    print (valor_pico_min)
+    print (valor_pico_max)
+    print (valor_pico_test)
+    detectados = 0 
+    if valor_pico_min/valor_pico_test > ratio_umbral:
+        detectados += 1
+        print ('Primer pico detectado')
+    if valor_pico_max/valor_pico_test > ratio_umbral:
+        detectados += 1
+        print ('Segundo pico detectado')
+    if detectados == 2:
+        print ('Principio y fin de la señal detectadas')
+    else:
+        print ('Error, no se ha detectado el principio o fin de la señal en el Ch1.')
+        return 
+    frecuencia_arbitraria = 440
+    a_convolucionar = gen_trigger(Onda(frecuencia_arbitraria,long=t_trig*2))
+    a_convolucionar = a_convolucionar[0:int(len(a_convolucionar)/2)]
+    a_convolucionar = Onda(triguer_min,long=t_trig)
+    plt.figure(3)
+    plt.plot(a_convolucionar)
+    plt.plot(trig,'*')
+    convolucion = np.convolve(np.flip(a_convolucionar),trig,'valid')  # Revisar porque funciona con un flip
+    plt.figure(4)
+    plt.plot(convolucion)
+    pos_max = np.argmax(convolucion)
+    print ('pos max: ' + str(pos_max/fs))
+    
+>>>>>>> 08eed7e566ccedadb5e87181ccbaf892f1a17433
